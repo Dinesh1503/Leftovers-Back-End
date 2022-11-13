@@ -8,7 +8,6 @@ import json
 DB_NAME = "Leftovers"
 CLIENT  = "mongodb://localhost:27017/"
 
-
 def signup(email,no,address):
     client = pymongo.MongoClient(CLIENT)
     db = client[DB_NAME]
@@ -82,8 +81,12 @@ def getuserinfo(email):
 # match("NonCooked","Veg")
 
 app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return "{'status':'Alive'}"
  
-@app.route('/signup',methods=["POST"])
+@app.route('/api/signup',methods=["POST"])
 def getdata():
     # if(request.args.get['email']):
     email = request.args.get('email')
@@ -91,7 +94,7 @@ def getdata():
     address = request.args.get('address')
     return signup(email,no,address)
 
-@app.route('/donate',methods=["POST"])
+@app.route('/api/donate',methods=["POST"])
 def donate():
     email = request.args.get('email')
     food = request.args.get('food')
@@ -100,15 +103,17 @@ def donate():
     diet = request.args.get('diet')
     return give(food,expiry,type,diet,email)
 
-@app.route('/order',methods=["POST"])
+@app.route('/api/order',methods=["POST"])
 def order():
     type = request.args.get('type')
     diet = request.args.get('diet')
     return match(type,diet)
 
 
-@app.route('/userinfo',methods=["POST"])
+@app.route('/api/userinfo',methods=["GET"])
 def userinfo():
     email = request.args.get('email')
     return getuserinfo(email)
 
+if __name__ == '__main__':
+    app.run(host="localhost", port=4123, debug=True)
