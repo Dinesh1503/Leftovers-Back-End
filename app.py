@@ -1,10 +1,9 @@
 from flask import Flask,request
+from flask_cors import CORS
 import os
 import pymongo
 import json
 
-
-# app = Flask(__name__)
 DB_NAME = "Leftovers"
 CLIENT  = "mongodb://localhost:27017/"
 
@@ -81,6 +80,7 @@ def getuserinfo(email):
 # match("NonCooked","Veg")
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/')
 def index():
