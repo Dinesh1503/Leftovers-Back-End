@@ -1,7 +1,8 @@
-from flask import Flask
+from flask import Flask,request
 import os
 import pymongo
 import json
+
 
 # app = Flask(__name__)
 DB_NAME = "Leftovers"
@@ -15,6 +16,7 @@ def signup(email,no,address):
     points = 100
     dict = { "Email": email, "Contact Number": no , "Address": address, "Points": points}
     x = col.insert_one(dict)
+    return "User Registered"
 
 def give(food,expiry,type,diet,email):
     client = pymongo.MongoClient(CLIENT)
@@ -35,6 +37,7 @@ def give(food,expiry,type,diet,email):
     query = {"Points":p}
     newvalues = { "$set": { "Points":new_points} }
     col.update_one(query,newvalues)
+    return "Food Collected"
 
 
 def match(type,diet):
@@ -51,17 +54,61 @@ def match(type,diet):
         output['Type'] = x['Type']
         output['Diet'] = x['Diet']
         output['Expiry'] = x['Expiry']
-    # print(output)
+    if(not bool(output)):
+        return "No food available that matches criteria"
+    col.delete_one(output)
     print(json.dumps(output))
     return json.dumps(output)
-        # if(x[0] ) 
 
+def getuserinfo(email):
+    client = pymongo.MongoClient(CLIENT)
+    db = client[DB_NAME]
+    col = db["Users"]
+    query = {"Email":email}
+    doc = col.find(query)
+    output = {}
+    for x in doc:
+        output['email']=x['Email']
+        output['no']=x['Contact Number']
+        output['address']=x['Address']
+        output['points']=x['Points']
+    if(not bool(output)):
+        return "User not registered in system"
+    return json.dumps(output)
 
+ 
 # signup("yahoo.com","08","Leeds")
 # give("cereals","Today","NonCooked","Veg","gmail.com")
-match("NonCooked","Veg")
+# match("NonCooked","Veg")
+
+app = Flask(__name__)
+ 
+@app.route('/signup',methods=["POST"])
+def getdata():
+    # if(request.args.get['email']):
+    email = request.args.get('email')
+    no = request.args.get('no')
+    address = request.args.get('address')
+    return signup(email,no,address)
+
+@app.route('/donate',methods=["POST"])
+def donate():
+    email = request.args.get('email')
+    food = request.args.get('food')
+    expiry = request.args.get('expiry')
+    type = request.args.get('type')
+    diet = request.args.get('diet')
+    return give(food,expiry,type,diet,email)
+
+@app.route('/order',methods=["POST"])
+def order():
+    type = request.args.get('type')
+    diet = request.args.get('diet')
+    return match(type,diet)
 
 
-
-
+@app.route('/userinfo',methods=["POST"])
+def userinfo():
+    email = request.args.get('email')
+    return getuserinfo(email)
 
